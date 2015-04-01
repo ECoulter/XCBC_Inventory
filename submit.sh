@@ -4,9 +4,11 @@
 #  and allocation_rule $round_robin
 # takes nmachines as 1st and only arg
 
-NMACHINES=$1
+NODEFILE=.machines.txt
 
-qsub -N job -cwd -b y -pe mpi $NMACHINES /opt/openmpi/bin/mpirun inventory.sh
+rocks list host | awk '$2=="Compute" {print substr($1,1,length($1)-1)}' > $NODEFILE
 
-qsub -b y -N cleanup -hold_jid job -cwd ./inventory_results.sh
+qsub -N Job1 -cwd -b y /opt/openmpi/bin/mpirun -machinefile $NODEFILE inventory.sh
+
+qsub -b y -N cleanup -hold_jid Job1 -cwd ./inventory_results.sh $NODEFILE
 
