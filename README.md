@@ -3,20 +3,17 @@ basic installation.
 
 Use at your own risk! 
 
-Currently: Asks Rocks for list of hosts
-           
-           Runs inventory on those, asks for hostname, cpuinfo, and memory
- 
-           Compares Rocks list of hosts to those returned from inventory
+Currently does the following:
+   - Asks Rocks for list of hosts
+   - Runs inventory on those, asks for hostname, cpuinfo, and memory
+   - Compares Rocks list of hosts to those returned from inventory
 
 Could be improved: 
 
- make submit.sh clearer?
+ - make submit.sh clearer?
 
- submit.sh cmdline options
+ - take queue as cmdline option as well?
 
-  - take queue as an option as well?
+ - why so slow through the queue? 
 
- why so slow through the queue? 
-
- make output format nicer?
+ - make output format nicer?
