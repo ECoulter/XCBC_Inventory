@@ -5,11 +5,11 @@ Use at your own risk!
 
 New Version (simple_inventory.sh):
 Currently:
- finds list of compute nodes from /etc/hosts
- grabs information from nodes over ssh
- turns into nice data sheet
- does NOT support GPU nodes yet
- does NOT deal with schedulers
+   - finds list of compute nodes from /etc/hosts
+   - grabs information from nodes over ssh
+   - turns into nice data sheet
+   - does NOT support GPU nodes yet
+   - does NOT deal with schedulers
 
 Old Version:
 Currently does the following:
