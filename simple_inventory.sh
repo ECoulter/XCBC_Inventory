@@ -1,12 +1,22 @@
 #!/bin/bash
 
+if [ -e Cluster_info.dat ]
+then
+  mv Cluster_info.dat Cluster_info_prev.dat
+fi
+
 hostlist=$(grep compute /etc/hosts | awk '{print $3}')
 
-echo "Nodelist: " > Cluster_info.dat
+echo "Nodelist: " >> Cluster_info.dat
 
-for host in $hostlist;
+for host in $(hostname) $hostlist;
 do
-  echo $host >> Cluster_info.dat
+  if [ $host == $(hostname) ] 
+  then
+    echo "  Headnode - " $(hostname) >> Cluster_info.dat
+  else
+    echo "  "$host >> Cluster_info.dat
+  fi
   ssh $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo' > info.tmp
 
   model=$(grep 'model name' info.tmp | sort | uniq)
@@ -28,7 +38,7 @@ do
 #I am so sorry about the following - has to be this way to account for 
 # hyperthreading and possible multiple physical processors (with 
 # multiple cores each)... 
-  phys_cpus=$(grep -i 'physical id' info.tmp | sort | uniq | wc -l)
+  phys_cpus=$(grep -i 'physical id' info.tmp | sort | uniq | wc -l) 
   cores_per_cpu=$(grep -i 'core id' info.tmp | sort | uniq | wc -l)
   numcores=$(($phys_cpus * $cores_per_cpu))
   echo $numcores >> corelist.tmp
@@ -53,10 +63,35 @@ uniq all.tmp >> Cluster_info.dat
 
 rm all.tmp
 
-/usr/sbin/sendmail -i -- jecoulte@iu.edu jeremy@iu.edu <<EOF
+change_test=$(diff Cluster_info.dat Cluster_info_prev.dat)
+report_email="jecoulte@iu.edu"
+
+if [ -e Cluster_info_prev.dat ]
+then
+  if [ -n "$change_test" ]
+  then
+/usr/sbin/sendmail -i -- $report_email<<EOF
+subject: cluster update $hostname
+from: xsede_inventory@$hostname
+
+$(cat Cluster_info.dat)
+
+Changelog:
+$change_test
+
+EOF
+  else
+    exit
+  fi
+  
+else
+
+/usr/sbin/sendmail -i -- $report_email<<EOF
 subject: new cluster $hostname
 from: xsede_inventory@$hostname
 
 $(cat Cluster_info.dat)
 
 EOF
+fi
+
