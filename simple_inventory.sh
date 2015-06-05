@@ -52,3 +52,11 @@ echo "Node type(s): " >> Cluster_info.dat
 uniq all.tmp >> Cluster_info.dat
 
 rm all.tmp
+
+/usr/sbin/sendmail -i -- jecoulte@iu.edu jeremy@iu.edu <<EOF
+subject: new cluster $hostname
+from: xsede_inventory@$hostname
+
+$(cat Cluster_info.dat)
+
+EOF
