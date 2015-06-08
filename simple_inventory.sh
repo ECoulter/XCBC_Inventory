@@ -14,10 +14,14 @@ do
   if [ $host == $(hostname) ] 
   then
     echo "  Headnode - " $(hostname) >> Cluster_info.dat
+    head -n 1 /proc/meminfo > info.tmp
+    cat /proc/cpuinfo >> info.tmp
+    cp info.tmp test.tmp
   else
     echo "  "$host >> Cluster_info.dat
+    ssh $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo' > info.tmp
   fi
-  ssh $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo' > info.tmp
+
 
   model=$(grep 'model name' info.tmp | sort | uniq)
   mem=$(awk 'NR==1 {print $2}' info.tmp)
@@ -46,7 +50,6 @@ do
 
 #calculate the flops on a per-node basis in case of cluster heterogeneity  
 #  numflops=$(($numcores*$speed*$instructs_per_cycle))
-  rm info.tmp
 done
 
 #count number of cores
@@ -63,11 +66,11 @@ uniq all.tmp >> Cluster_info.dat
 
 rm all.tmp
 
-change_test=$(diff Cluster_info.dat Cluster_info_prev.dat)
 report_email="jecoulte@iu.edu"
 
 if [ -e Cluster_info_prev.dat ]
 then
+ change_test=$(diff Cluster_info.dat Cluster_info_prev.dat)
   if [ -n "$change_test" ]
   then
 /usr/sbin/sendmail -i -- $report_email<<EOF
