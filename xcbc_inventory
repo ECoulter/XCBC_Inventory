@@ -1,0 +1,2 @@
+#Run inventory once a month on same day as install + 1
+HOME=/opt/xcbc_inventory
