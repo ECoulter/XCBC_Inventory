@@ -15,6 +15,7 @@ Currently:
    - finds list of compute nodes from /etc/hosts
    - grabs information from nodes over ssh
    - turns into nice data sheet
+   - emails out to $report_email
    - does NOT support GPU nodes yet
    - does NOT deal with schedulers
 
