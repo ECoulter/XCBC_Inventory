@@ -44,7 +44,7 @@ do
 # hyperthreading and possible multiple physical processors (with 
 # multiple cores each)... 
   phys_cpus=$(grep -i 'physical id' info.tmp | sort | uniq | wc -l) 
-  cores_per_cpu=$(grep -i 'core id' info.tmp | sort | uniq | wc -l)
+  cores_per_cpu=$(grep -i 'cpu cores' info.tmp | awk '{print $4}' | uniq)
   numcores=$(($phys_cpus * $cores_per_cpu))
 #these two for summing total cores and memory of cluster
   echo $numcores >> corelist.tmp
