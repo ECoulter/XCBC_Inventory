@@ -14,14 +14,13 @@ do
   if [ $host == $(hostname) ] 
   then
     echo "  Headnode - " $(hostname) >> Cluster_info.dat
+#get the amount of RAM & cpuinfo without having to use ssh
     head -n 1 /proc/meminfo > info.tmp
     cat /proc/cpuinfo >> info.tmp
-    cp info.tmp test.tmp
   else
     echo "  "$host >> Cluster_info.dat
     ssh $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo' > info.tmp
   fi
-
 
   model=$(grep 'model name' info.tmp | sort | uniq)
   mem=$(awk 'NR==1 {print $2}' info.tmp)
@@ -48,8 +47,21 @@ do
   echo $numcores >> corelist.tmp
   echo $mem >> memlist.tmp
 
-#calculate the flops on a per-node basis in case of cluster heterogeneity  
-#  numflops=$(($numcores*$speed*$instructs_per_cycle))
+  if [ $host == $(hostname) ] 
+  then
+    name_string=$(echo "  Headnode - " $host)
+#get the amount of RAM & cpuinfo without having to use ssh
+  else
+    name_string=$(echo "  "$host)
+  fi
+  if [ -z "$phys_cpus" ]
+  then
+    info_string="access failed"
+  else
+    info_string=$(echo " has " $phys_cpus " cpus with " $cores_per_cpu " cores each")
+  fi
+  echo $name_string $info_string 
+
 done
 
 #count number of cores
