@@ -13,21 +13,24 @@ for host in $(hostname) $hostlist;
 do
   if [ $host == $(hostname) ] 
   then
-    echo "  Headnode - " $(hostname) >> Cluster_info.dat
 #get the amount of RAM & cpuinfo without having to use ssh
     head -n 1 /proc/meminfo > info.tmp
     cat /proc/cpuinfo >> info.tmp
+    cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq >> info.tmp
   else
-    echo "  "$host >> Cluster_info.dat
-    ssh $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo' > info.tmp
+# have to get speed from here b/c of cpu scaling... this is getting ugly
+    ssh -q $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo && cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq' > info.tmp
   fi
-
-  model=$(grep 'model name' info.tmp | sort | uniq)
+#check that access was successful
+  if [ -s info.tmp ]
+  then
+  model=$(grep 'model name' info.tmp | sort | uniq | sed 's/model name//')
   mem=$(awk 'NR==1 {print $2}' info.tmp)
   #get speed from here since can't trust cpuinfo MHz which can be scaled
+  # assume that if the headnode has this file, the compute nodes will too
   if [ -e /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq ]
   then
-    speed=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq)
+    speed=$(tail -n 1 info.tmp)
     #put into MHz just like the other one
     speed=$(bc <<< "$speed / 1000")
   else
@@ -36,7 +39,6 @@ do
   fi
   speed=$(bc <<< "scale=2; $speed / 1000") #scale speed into GHz
   mem=$(bc <<< "scale=2;$mem/1048576") #scale mem into GiB
-  echo $model " RAM: " $mem "GiB  CPUSpeed: " $speed "GHz" >> all.tmp
 
 #I am so sorry about the following - has to be this way to account for 
 # hyperthreading and possible multiple physical processors (with 
@@ -44,23 +46,27 @@ do
   phys_cpus=$(grep -i 'physical id' info.tmp | sort | uniq | wc -l) 
   cores_per_cpu=$(grep -i 'core id' info.tmp | sort | uniq | wc -l)
   numcores=$(($phys_cpus * $cores_per_cpu))
+#these two for summing total cores and memory of cluster
   echo $numcores >> corelist.tmp
   echo $mem >> memlist.tmp
+# put into all.tmp for later counted list of node types
+  echo " X "$model " RAM: " $mem "GiB  CPUSpeed: " $speed "GHz, with" $phys_cpus "cpus and " $numcores "cores" >> all.tmp
 
+#get the naming right for the headnode...
   if [ $host == $(hostname) ] 
   then
     name_string=$(echo "  Headnode - " $host)
-#get the amount of RAM & cpuinfo without having to use ssh
   else
     name_string=$(echo "  "$host)
   fi
-  if [ -z "$phys_cpus" ]
-  then
+
+#gather the node info for the brief summary
+  info_string=$(echo " has " $phys_cpus " cpus with " $cores_per_cpu " cores each")
+  else #from the -s info.tmp test above - this means access failed
+    name_string=$(echo "  "$host)
     info_string="access failed"
-  else
-    info_string=$(echo " has " $phys_cpus " cpus with " $cores_per_cpu " cores each")
   fi
-  echo $name_string $info_string 
+  echo "  "$name_string $info_string >> Cluster_info.dat
 
 done
 
@@ -74,7 +80,7 @@ rm memlist.tmp
 
 #put processor names & memory into Cluster_info, sorted for uniqeness
 echo "Node type(s): " >> Cluster_info.dat
-uniq all.tmp >> Cluster_info.dat
+sort all.tmp | uniq -c >> Cluster_info.dat
 
 rm all.tmp
 
