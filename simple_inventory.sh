@@ -7,6 +7,10 @@ fi
 
 hostlist=$(grep compute /etc/hosts | awk '{print $3}')
 
+numcores_total=0
+mem_total=0
+declare -i numcores_total
+
 echo "Nodelist: " >> Cluster_info.dat
 
 for host in $(hostname) $hostlist;
@@ -14,41 +18,46 @@ do
   if [ $host == $(hostname) ] 
   then
 #get the amount of RAM & cpuinfo without having to use ssh
+# headnode example here makes the ssh command below clearer
     head -n 1 /proc/meminfo > info.tmp
     cat /proc/cpuinfo >> info.tmp
+# have to get speed from here b/c of cpu scaling... this is getting ugly
     cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq >> info.tmp
   else
-# have to get speed from here b/c of cpu scaling... this is getting ugly
+# for the compute nodes get it all from ssh in one shot
     ssh -q $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo && cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq' > info.tmp
   fi
 #check that access was successful
   if [ -s info.tmp ]
   then
+#get the processor name
   model=$(grep 'model name' info.tmp | sort | uniq | sed 's/model name//')
+#get total RAM of current node ($host)
   mem=$(awk 'NR==1 {print $2}' info.tmp)
-  #get speed from here since can't trust cpuinfo MHz which can be scaled
-  # assume that if the headnode has this file, the compute nodes will too
+# assume that if the headnode has this file, the compute nodes will too
   if [ -e /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq ]
   then
     speed=$(tail -n 1 info.tmp)
     #put into MHz just like the other one
     speed=$(bc <<< "$speed / 1000")
   else
-  #if we can't do it the right way, might as well do it the wrong way
+#if we can't do it the right way, might as well do it the wrong way
     speed=$(grep MHz info.tmp | sort | uniq)
   fi
   speed=$(bc <<< "scale=2; $speed / 1000") #scale speed into GHz
   mem=$(bc <<< "scale=2;$mem/1048576") #scale mem into GiB
 
-#I am so sorry about the following - has to be this way to account for 
+# Has to be this way to account for 
 # hyperthreading and possible multiple physical processors (with 
 # multiple cores each)... 
   phys_cpus=$(grep -i 'physical id' info.tmp | sort | uniq | wc -l) 
   cores_per_cpu=$(grep -i 'cpu cores' info.tmp | awk '{print $4}' | uniq)
   numcores=$(($phys_cpus * $cores_per_cpu))
+
 #these two for summing total cores and memory of cluster
-  echo $numcores >> corelist.tmp
-  echo $mem >> memlist.tmp
+  numcores_total=$(bc <<< "$numcores_total+$numcores")
+  mem_total=$(bc <<< "scale=2; $mem_total + $mem")
+
 # put into all.tmp for later counted list of node types
   echo " X "$model " RAM: " $mem "GiB  CPUSpeed: " $speed "GHz, with" $phys_cpus "cpus and " $numcores "cores" >> all.tmp
 
@@ -70,16 +79,13 @@ do
 
 done
 
-#count number of cores
-awk '{sum+=$1} END {print "\nTotal cores: ", sum}' corelist.tmp >> Cluster_info.dat
-rm corelist.tmp
+echo "total cores and mem:" $numcores_total $mem_total
 
-#sum RAM of cluster
-awk '{sum+=$1} END {print "\nTotal Memory: ", sum" GiB \n" }' memlist.tmp >> Cluster_info.dat
-rm memlist.tmp
+echo -e "\n Total Cores: " $numcores_total >> Cluster_info.dat
+echo -e "\n Total Memory: " $mem_total >> Cluster_info.dat
 
 #put processor names & memory into Cluster_info, sorted for uniqeness
-echo "Node type(s): " >> Cluster_info.dat
+echo -e "\n Node type(s): " >> Cluster_info.dat
 sort all.tmp | uniq -c >> Cluster_info.dat
 
 rm all.tmp
