@@ -1,5 +1,5 @@
 Name:		xcbc_inventory
-Version:	0.1.1
+Version:	0.1.2
 Release:	0
 Summary:	simple cluster inventory rpm
 
@@ -60,3 +60,4 @@ rm -rf /opt/xcbc_inventory
  * Mon Jun 8 2015 	John Coulter
  - 0.1 Initial Version Release 0
  - 0.1.1 Initial Version changed user to xcbc_checker Release 0
+ - 0.1.2 Changed script to reflect encounter with heterogeneous cluster 
