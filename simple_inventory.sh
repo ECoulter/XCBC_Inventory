@@ -1,5 +1,41 @@
 #!/bin/bash
 
+#re-doing this to prompt user
+# no more cron job needed! just call this from bashrc as xcbc_checker
+# in rpm  run 
+#  sed -i "su - xcbc_checker -c \"/opt/xcbc_inventory/inventory_script.sh\"" /root/.bashrc
+# new comment
+
+filename="/opt/xcbc_inventory/Cluster_info.dat"
+script="/opt/xcbc_inventory/inventory_script.sh"
+report_email="jecoulte@iu.edu"
+
+echo "Thank you for installing the XCBC Rocks Roll!"
+echo "Please participate in reporting your useage of this back to the XSEDE Campus Bridging group"
+echo "in order to help us continue to get funding from the NSF! Useage statistics are important!"
+echo "This script will take inventory of your cluster and send mail back to the CB group."
+echo "If you have not yet added compute nodes, then please delay execution until you've finished adding nodes."
+echo "If your organization blocks port 25 or sendmail, don't let this run automatically!"
+echo "Instead, please send us an email with the resulting inventory file in $filename"
+echo "Enter 'Y' to allow the script to run automatically"
+echo "Enter 'D' to run this next time, if you haven't finished with insert-ethers yet"
+echo "Enter 'E' to generate a report to be emailed to $report_email"
+echo "Enter 'N' to never run this again (but please support the team that made this free for you!)"
+
+shopt -s nocasematch
+
+read $option
+
+case $option in
+ Y) echo "Thank you for participating! We really appreciate your feedback.";
+ D) echo "Thank you for participating! This will run on your next terminal instance."; exit;
+ E) echo "Thank you for participating!";
+ N) echo "Please reconsider; your feedback will help us get funding in the future. If you change your ungrateful ways, please run this script from $script"; touch /opt/xcbc_inventory/remove; exit; 
+ *) echo "Invalid response: try again." GOTO beginning
+esac
+
+echo "Generating inventory report."
+
 if [ -e Cluster_info.dat ]
 then
   mv Cluster_info.dat Cluster_info_prev.dat
@@ -15,6 +51,7 @@ echo "Nodelist: " >> Cluster_info.dat
 
 for host in $(hostname) $hostlist;
 do
+  echo -n '.'
   if [ $host == $(hostname) ] 
   then
 #get the amount of RAM & cpuinfo without having to use ssh
@@ -79,7 +116,7 @@ do
 
 done
 
-echo "total cores and mem:" $numcores_total $mem_total
+echo "Total cores and Memory found:" $numcores_total $mem_total
 
 echo -e "\n Total Cores: " $numcores_total >> Cluster_info.dat
 echo -e "\n Total Memory: " $mem_total >> Cluster_info.dat
@@ -90,7 +127,12 @@ sort all.tmp | uniq -c >> Cluster_info.dat
 
 rm all.tmp
 
-report_email="jecoulte@iu.edu"
+if [[ $option == E ]]
+then
+ echo "Report generated! Please email the contents of $filename to $report_email"
+ echo "Thank you again for using the XCBC Rocks Roll!"
+ exit
+fi
 
 if [ -e Cluster_info_prev.dat ]
 then
