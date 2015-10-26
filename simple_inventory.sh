@@ -3,11 +3,11 @@
 #re-doing this to prompt user
 # no more cron job needed! just call this from bashrc as xcbc_checker
 # in rpm  run 
-#  sed -i "su - xcbc_checker -c \"/opt/xcbc_inventory/inventory_script.sh\"" /root/.bashrc
+#  sed -i "su - xcbc_checker -c \"$HOME/inventory_script.sh\"" /root/.bashrc
 # new comment
 
-filename="/opt/xcbc_inventory/Cluster_info.dat"
-script="/opt/xcbc_inventory/inventory_script.sh"
+filename="$HOME/Cluster_info.dat"
+script="$HOME/inventory_script.sh"
 report_email="jecoulte@iu.edu"
 invalid=true
 
@@ -48,7 +48,7 @@ Press any key to continue:';
 future. If you change your mind, please run this script from 
 $script. 
 Press any key to continue"; 
-   touch /opt/xcbc_inventory/remove
+   touch $HOME/remove
    read dummyvar;
    echo -e "clear \n sgr0" | tput -S;
    exit;;
@@ -188,7 +188,7 @@ Press any key to continue:"
    read dummyvar
    echo -e "clear \n sgr0" | tput -S
    #remove from .bashrc
-   touch /opt/xcbc_inventory/remove
+   touch $HOME/remove
    exit
   fi
   
@@ -212,6 +212,6 @@ Press any key to continue."
 read dummyvar
 
 #remove from .bashrc
-touch /opt/xcbc_inventory/remove
+touch $HOME/remove
 
 echo -e "clear \n sgr0" | tput -S
