@@ -60,7 +60,7 @@ fi #xcbc_inventory
 " >> $HOME/.bashrc
 
 %postun
-rm -rf /opt/xcbc_inventory
+userdel -f xcbc_checker
 sed -i 'xcbc_inventory/d' $HOME/.bashrc
 sed -i 'xcbc_checker/d' /etc/ssh/sshd_config
 
