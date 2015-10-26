@@ -9,39 +9,61 @@
 filename="/opt/xcbc_inventory/Cluster_info.dat"
 script="/opt/xcbc_inventory/inventory_script.sh"
 report_email="jecoulte@iu.edu"
+invalid=true
 
-echo "Thank you for installing the XCBC Rocks Roll!"
-echo "Please participate in reporting your useage of this back to the XSEDE Campus Bridging group"
-echo "in order to help us continue to get funding from the NSF! Useage statistics are important!"
-echo "This script will take inventory of your cluster and send mail back to the CB group."
-echo "If you have not yet added compute nodes, then please delay execution until you've finished adding nodes."
-echo "If your organization blocks port 25 or sendmail, don't let this run automatically!"
-echo "Instead, please send us an email with the resulting inventory file in $filename"
-echo "Enter 'Y' to allow the script to run automatically"
-echo "Enter 'D' to run this next time, if you haven't finished with insert-ethers yet"
-echo "Enter 'E' to generate a report to be emailed to $report_email"
-echo "Enter 'N' to never run this again (but please support the team that made this free for you!)"
+echo -e "clear\n bold \n setaf 0" | tput -S
+echo 'Thank you for installing the XCBC Rocks Roll!
+This script will take inventory of your cluster and send mail back to the XSEDE
+Campus Bridging group.
+Please participate in order to help us continue to get funding from the NSF! 
+If you have not yet added compute nodes, then please delay execution until you
+have finished adding nodes.
+If your organization blocks port 25 or sendmail, do not let this run 
+automatically!  Instead, please send us an email with the resulting 
+inventory file in $filename'
+tput setaf 1
+echo 'Enter "Y" to allow the script to run automatically
+Enter "D" to run this next time, if you have not finished with insert-ethers yet
+Enter "E" to generate a report to be emailed to $report_email
+Enter "N" to never run this again (but please support the team that made this free for you!)'
+tput setaf 0
 
 shopt -s nocasematch
 
-read $option
+while [[ $invalid == "true" ]]; do
 
-case $option in
- Y) echo "Thank you for participating! We really appreciate your feedback.";
- D) echo "Thank you for participating! This will run on your next terminal instance."; exit;
- E) echo "Thank you for participating!";
- N) echo "Please reconsider; your feedback will help us get funding in the future. If you change your ungrateful ways, please run this script from $script"; touch /opt/xcbc_inventory/remove; exit; 
- *) echo "Invalid response: try again." GOTO beginning
-esac
+  invalid=false
+  read option
 
-echo "Generating inventory report."
+  case $option in
+   Y) echo "Thank you for participating! We really appreciate your feedback.";;
+   D) echo 'Thank you for participating! 
+This will run on your next terminal instance. 
+Press any key to continue:';
+   read dummyvar;
+   echo -e "clear \n sgr0" | tput -S;
+   exit;;
+   E) echo "Thank you for participating!";;
+   N) echo "Please reconsider; your feedback would help us get funding in the 
+future. If you change your mind, please run this script from 
+$script. 
+Press any key to continue"; 
+   touch /opt/xcbc_inventory/remove
+   read dummyvar;
+   echo -e "clear \n sgr0" | tput -S;
+   exit;;
+   *) echo "Invalid response: try again."; invalid=true;;
+  esac
+done
+
+echo -n "Generating inventory report."
 
 if [ -e Cluster_info.dat ]
 then
   mv Cluster_info.dat Cluster_info_prev.dat
 fi
 
-hostlist=$(grep compute /etc/hosts | awk '{print $3}')
+hostlist=$(grep 'compute' /etc/hosts | awk '{print $3}')
 
 numcores_total=0
 mem_total=0
@@ -59,10 +81,16 @@ do
     head -n 1 /proc/meminfo > info.tmp
     cat /proc/cpuinfo >> info.tmp
 # have to get speed from here b/c of cpu scaling... this is getting ugly
-    cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq >> info.tmp
+    if [ -e /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq ]
+    then
+      cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq >> info.tmp
+      query='head -n 1 /proc/meminfo && cat /proc/cpuinfo && cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq'
+    else
+      query='head -n 1 /proc/meminfo && cat /proc/cpuinfo'
+    fi
   else
 # for the compute nodes get it all from ssh in one shot
-    ssh -q $host 'head -n 1 /proc/meminfo && cat /proc/cpuinfo && cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq' > info.tmp
+    ssh -q $host $query > info.tmp
   fi
 #check that access was successful
   if [ -s info.tmp ]
@@ -79,7 +107,7 @@ do
     speed=$(bc <<< "$speed / 1000")
   else
 #if we can't do it the right way, might as well do it the wrong way
-    speed=$(grep MHz info.tmp | sort | uniq)
+    speed=$(grep 'MHz' info.tmp | sort | uniq | awk '{print $4}')
   fi
   speed=$(bc <<< "scale=2; $speed / 1000") #scale speed into GHz
   mem=$(bc <<< "scale=2;$mem/1048576") #scale mem into GiB
@@ -116,7 +144,7 @@ do
 
 done
 
-echo "Total cores and Memory found:" $numcores_total $mem_total
+echo -e "\nTotal cores and Memory found:" $numcores_total "cores" $mem_total "GB RAM"
 
 echo -e "\n Total Cores: " $numcores_total >> Cluster_info.dat
 echo -e "\n Total Memory: " $mem_total >> Cluster_info.dat
@@ -129,8 +157,10 @@ rm all.tmp
 
 if [[ $option == E ]]
 then
- echo "Report generated! Please email the contents of $filename to $report_email"
- echo "Thank you again for using the XCBC Rocks Roll!"
+ echo -e "Report generated! Please email the contents of 
+$filename
+to $report_email
+Thank you again for using the XCBC Rocks Roll!"
  exit
 fi
 
@@ -150,7 +180,16 @@ $change_test
 
 EOF
   else
-    exit
+   echo "Inventory done! If you upgrade your cluster, and would like to update 
+the CB team on your new capabilities, simply run this again from
+$filename
+Thanks again!
+Press any key to continue:"
+   read dummyvar
+   echo -e "clear \n sgr0" | tput -S
+   #remove from .bashrc
+   touch /opt/xcbc_inventory/remove
+   exit
   fi
   
 else
@@ -164,3 +203,15 @@ $(cat Cluster_info.dat)
 EOF
 fi
 
+echo "Inventory done! If you upgrade your cluster, and would like to update 
+the CB team on your new capabilities, simply run this again from
+$filename
+Thanks again!
+Press any key to continue."
+
+read dummyvar
+
+#remove from .bashrc
+touch /opt/xcbc_inventory/remove
+
+echo -e "clear \n sgr0" | tput -S
