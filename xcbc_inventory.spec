@@ -62,6 +62,7 @@ fi #xcbc_inventory
 %postun
 rm -rf /opt/xcbc_inventory
 sed -i 'xcbc_inventory/d' $HOME/.bashrc
+sed -i 'xcbc_checker/d' /etc/ssh/sshd_config
 
 %changelog
  * Mon Jun 8 2015 	John Coulter
