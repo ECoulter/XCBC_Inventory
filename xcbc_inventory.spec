@@ -1,5 +1,5 @@
 Name:		xcbc_inventory
-Version:	0.1.2
+Version:	0.2
 Release:	0
 Summary:	simple cluster inventory rpm
 
@@ -33,7 +33,6 @@ grep "DenyUsers xcbc_checker" /etc/ssh/sshd_config || sed -i '13 i DenyUsers xcb
 %install
 mkdir -p $RPM_BUILD_ROOT/opt/xcbc_inventory/
 install -m 700 simple_inventory.sh $RPM_BUILD_ROOT/opt/xcbc_inventory/
-cat inventory_bashrc >> $RPM_BUILD_ROOT/root/.bashrc
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -46,25 +45,27 @@ rm -rf %{_topdir}/BUILD/%{name}
 %attr(700, xcbc_checker, xcbc_checker) /opt/xcbc_inventory/simple_inventory.sh
 
 %post 
-chown xcbc_checker:xcbc_checker /opt/xcbc_inventory
+chown xcbc_checker:xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory
 echo -e "
-if [ $(rocks list host | grep compute | wc -l) != 0 ]; #checking if compute nodes prior to running xcbc_inventory
+if [ \$(rocks list host | grep compute | wc -l) != 0 ]; #checking if compute nodes prior to running xcbc_inventory
 then #xcbc_inventory
-if [ -e /opt/xcbc_inventory/remove ]; 
+if [ -e $RPM_INSTALL_PREFIX/xcbc_inventory/remove ]; 
 then #xcbc_inventory
-  rm -f /opt/xcbc_inventory/remove
-  sed -i '/xcbc_inventory/d' /root/.bashrc
+  rm -f $RPM_INSTALL_PREFIX/xcbc_inventory/remove
+  sed -i '/xcbc_inventory/d' $HOME/.bashrc
 else #xcbc_inventory
-  su - xcbc_checker /opt/xcbc_inventory/simple_inventory.sh
+  su - xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory/simple_inventory.sh
 fi #xcbc_inventory
 fi #xcbc_inventory
 " >> $HOME/.bashrc
 
 %postun
 rm -rf /opt/xcbc_inventory
+sed -i 'xcbc_inventory/d' $HOME/.bashrc
 
 %changelog
  * Mon Jun 8 2015 	John Coulter
  - 0.1 Initial Version Release 0
  - 0.1.1 Initial Version changed user to xcbc_checker Release 0
  - 0.1.2 Changed script to reflect encounter with heterogeneous cluster 
+ - 0.2 Removed cron; added interactive script in case port 25 is blocked
