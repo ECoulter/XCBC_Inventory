@@ -154,13 +154,17 @@ echo -e "\n Node type(s): " >> Cluster_info.dat
 sort all.tmp | uniq -c >> Cluster_info.dat
 
 rm all.tmp
+touch $HOME/remove
 
 if [[ $option == E ]]
 then
  echo -e "Report generated! Please email the contents of 
 $filename
 to $report_email
-Thank you again for using the XCBC Rocks Roll!"
+Thank you again for using the XCBC Rocks Roll!
+Press any key to continue."
+ read dummyvar
+echo -e "clear \n sgr0" | tput -S
  exit
 fi
 
@@ -187,8 +191,6 @@ Thanks again!
 Press any key to continue:"
    read dummyvar
    echo -e "clear \n sgr0" | tput -S
-   #remove from .bashrc
-   touch $HOME/remove
    exit
   fi
   
@@ -210,8 +212,5 @@ Thanks again!
 Press any key to continue."
 
 read dummyvar
-
-#remove from .bashrc
-touch $HOME/remove
 
 echo -e "clear \n sgr0" | tput -S

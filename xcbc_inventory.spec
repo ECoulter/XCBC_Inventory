@@ -46,8 +46,7 @@ rm -rf %{_topdir}/BUILD/%{name}
 
 %post 
 chown xcbc_checker:xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory
-echo -e "
-if [ \$(rocks list host | grep compute | wc -l) != 0 ]; #checking if compute nodes prior to running xcbc_inventory
+echo -e " if [ \$(rocks list host | grep compute | wc -l) != 0 ]; #checking if compute nodes prior to running xcbc_inventory
 then #xcbc_inventory
 if [ -e $RPM_INSTALL_PREFIX/xcbc_inventory/remove ]; 
 then #xcbc_inventory
@@ -56,13 +55,13 @@ then #xcbc_inventory
 else #xcbc_inventory
   su - xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory/simple_inventory.sh
 fi #xcbc_inventory
-fi #xcbc_inventory
-" >> $HOME/.bashrc
+fi #xcbc_inventory" >> $HOME/.bashrc
 
 %postun
 userdel -f xcbc_checker
-sed -i 'xcbc_inventory/d' $HOME/.bashrc
-sed -i 'xcbc_checker/d' /etc/ssh/sshd_config
+rm -rf $RPM_INSTALL_PREFIX/xcbc_inventory
+sed -i '/xcbc_inventory/d' $HOME/.bashrc
+sed -i '/xcbc_checker/d' /etc/ssh/sshd_config
 
 %changelog
  * Mon Jun 8 2015 	John Coulter
