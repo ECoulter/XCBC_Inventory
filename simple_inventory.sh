@@ -8,7 +8,7 @@
 
 filename="$HOME/Cluster_info.dat"
 script="$HOME/inventory_script.sh"
-report_email="jecoulte@iu.edu"
+report_email="xsedecb@iu.edu"
 invalid=true
 
 echo -e "clear\n bold \n setaf 0" | tput -S
