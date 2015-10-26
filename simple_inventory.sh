@@ -90,7 +90,7 @@ do
     fi
   else
 # for the compute nodes get it all from ssh in one shot
-    ssh -q $host $query > info.tmp
+    ssh -q $host $query > info.tmp 2> /dev/null
   fi
 #check that access was successful
   if [ -s info.tmp ]
