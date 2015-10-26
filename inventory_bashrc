@@ -1,0 +1,7 @@
+if [ -e /opt/xcbc_inventory/remove ]; 
+then #xcbc_inventory
+  rm -f /opt/xcbc_inventory/remove
+  sed -i '/xcbc_inventory/d' /root/.bashrc
+else #xcbc_inventory
+  su - xcbc_checker /opt/xcbc_inventory/simple_inventory.sh
+fi #xcbc_inventory
