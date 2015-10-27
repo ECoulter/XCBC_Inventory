@@ -46,7 +46,7 @@ rm -rf %{_topdir}/BUILD/%{name}
 
 %post 
 chown xcbc_checker:xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory
-echo -e "if [ -z "$PS1" ]; #xcbc_inventory - check if interactive shell!
+echo -e "if [ -z \"\$PS1\" ]; #xcbc_inventory - check if interactive shell!
 then #xcbc_inventory
   sleep 0 #xcbc_inventory do nothing if non-interactive
 else #xcbc_inventory
