@@ -34,6 +34,8 @@ while [[ $invalid == "true" ]]; do
 
   invalid=false
   read option
+  
+  tput clear
 
   case $option in
    Y) echo "Thank you for participating! We really appreciate your feedback.";;
