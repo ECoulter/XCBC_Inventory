@@ -23,6 +23,7 @@ speed, RAM, cluster name) back to XSEDE for accounting purposes.
 #/usr/bin/getent group xcbc_checker || /usr/sbin/groupadd -r xcbc_checker
 /usr/bin/getent passwd xcbc_checker || /usr/sbin/useradd -d /opt/xcbc_inventory -s /bin/bash xcbc_checker
 grep "DenyUsers xcbc_checker" /etc/ssh/sshd_config || sed -i '13 i DenyUsers xcbc_checker' /etc/ssh/sshd_config
+sed -i 's/\(,nobody,\)/,xcbc_checker\1/' /etc/gdm/gdm.schemas
 #exit 0 #to prevent install failure if can't add that user?
 
 %prep
@@ -67,6 +68,7 @@ userdel -f xcbc_checker
 rm -rf $RPM_INSTALL_PREFIX/xcbc_inventory
 sed -i '/xcbc_inventory/d' $HOME/.bashrc
 sed -i '/xcbc_checker/d' /etc/ssh/sshd_config
+sed -i 's/,xcbc_checker//' /etc/gdm/gdm.schemas
 
 %changelog
  * Mon Jun 8 2015 	John Coulter
