@@ -46,16 +46,21 @@ rm -rf %{_topdir}/BUILD/%{name}
 
 %post 
 chown xcbc_checker:xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory
-echo -e " if [ \$(rocks list host | grep compute | wc -l) != 0 ]; #checking if compute nodes prior to running xcbc_inventory
+echo -e "if [ -z "$PS1" ]; #xcbc_inventory - check if interactive shell!
 then #xcbc_inventory
-if [ -e $RPM_INSTALL_PREFIX/xcbc_inventory/remove ]; 
-then #xcbc_inventory
-  rm -f $RPM_INSTALL_PREFIX/xcbc_inventory/remove
-  sed -i '/xcbc_inventory/d' $HOME/.bashrc
+  sleep 0 #xcbc_inventory do nothing if non-interactive
 else #xcbc_inventory
-  su - xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory/simple_inventory.sh
-fi #xcbc_inventory
-fi #xcbc_inventory" >> $HOME/.bashrc
+  if [ \$(rocks list host | grep compute | wc -l) != 0 ]; #checking if compute nodes prior to running xcbc_inventory
+  then #xcbc_inventory
+    if [ -e $RPM_INSTALL_PREFIX/xcbc_inventory/remove ]; 
+    then #xcbc_inventory
+      rm -f $RPM_INSTALL_PREFIX/xcbc_inventory/remove
+      sed -i '/xcbc_inventory/d' $HOME/.bashrc
+    else #xcbc_inventory
+      su - xcbc_checker $RPM_INSTALL_PREFIX/xcbc_inventory/simple_inventory.sh
+    fi #xcbc_inventory remove 
+  fi #xcbc_inventory compute nodes present
+fi #xcbc_inventory interactive check" >> $HOME/.bashrc
 
 %postun
 userdel -f xcbc_checker
