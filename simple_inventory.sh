@@ -3,11 +3,11 @@
 #re-doing this to prompt user
 # no more cron job needed! just call this from bashrc as xcbc_checker
 # in rpm  run 
-#  sed -i "su - xcbc_checker -c \"$HOME/inventory_script.sh\"" /root/.bashrc
+#  sed -i "su - xcbc_checker -c \"$HOME/simple_inventory.sh\"" /root/.bashrc
 # new comment
 
 filename="$HOME/Cluster_info.dat"
-script="$HOME/inventory_script.sh"
+script="$HOME/simple_inventory.sh"
 report_email="xsedecb@iu.edu"
 invalid=true
 
